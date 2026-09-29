@@ -1,0 +1,348 @@
+<!DOCTYPE html> <html lang="fr"> <head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1"> <title>Gestion des outils tiers</title> <style> :root { --fond: #f5f7fa; --surface: #ffffff; --texte: #202938; --secondaire: #5b6677; --bordure: #dce2ea; --principal: #2459a6; --principal-survol: #194783; --succes: #167448; --danger: #a52b35; }
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+header {
+  padding: 2rem max(1rem, calc((100% - 1100px) / 2));
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+}
+
+header h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+}
+
+header p {
+  margin: 0;
+  color: var(--secondaire);
+}
+
+main {
+  width: min(1100px, calc(100% - 2rem));
+  margin: 2rem auto;
+}
+
+section {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+}
+
+h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.3rem;
+}
+
+.introduction {
+  margin: 0 0 1.25rem;
+  color: var(--secondaire);
+}
+
+.message {
+  min-height: 1.5rem;
+  margin: 0 0 1rem;
+  color: var(--succes);
+  font-weight: 600;
+}
+
+.conteneur-tableau {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid var(--bordure);
+  vertical-align: top;
+}
+
+th {
+  color: var(--secondaire);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td a {
+  color: var(--principal);
+  overflow-wrap: anywhere;
+}
+
+.etat {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.etat-actif {
+  color: var(--succes);
+  background: #e7f5ed;
+}
+
+.etat-inactif {
+  color: var(--secondaire);
+  background: #edf0f4;
+}
+
+.actions {
+  display: flex;
+  min-width: 145px;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+button {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--principal);
+  border-radius: 6px;
+  background: var(--principal);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--principal-survol);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #c9dcf7;
+  outline-offset: 2px;
+}
+
+.bouton-secondaire {
+  background: #ffffff;
+  color: var(--principal);
+}
+
+.bouton-secondaire:hover {
+  background: #edf3fb;
+  color: var(--principal-survol);
+}
+
+.bouton-suppression {
+  border-color: var(--danger);
+  background: #ffffff;
+  color: var(--danger);
+}
+
+.bouton-suppression:hover {
+  background: #fff0f0;
+}
+
+.grille-formulaire {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.champ-large {
+  grid-column: 1 / -1;
+}
+
+label,
+legend {
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="url"],
+textarea {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid #b9c3d0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--texte);
+  font: inherit;
+}
+
+textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+fieldset {
+  margin: 1rem 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--bordure);
+  border-radius: 6px;
+}
+
+fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+.actions-formulaire {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  section {
+    padding: 1rem;
+  }
+
+  .grille-formulaire {
+    grid-template-columns: 1fr;
+  }
+
+  .champ-large {
+    grid-column: auto;
+  }
+}
+</style> </head> <body> <header> <h1>Gestion des outils tiers</h1> <p>Ajoutez, modifiez, activez ou supprimez les services externes utilisés par votre organisation.</p> </header> <main> <p id="message" class="message" role="status" aria-live="polite"></p>
+<section aria-labelledby="titre-outils">
+  <h2 id="titre-outils">Outils enregistrés</h2>
+  <p class="introduction">Consultez et gérez les outils tiers de votre organisation.</p>
+
+  <div class="conteneur-tableau">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Nom</th>
+          <th scope="col">Description</th>
+          <th scope="col">URL</th>
+          <th scope="col">État</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="liste-outils"></tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="titre-ajout">
+  <h2 id="titre-ajout">Ajouter un outil</h2>
+  <p class="introduction">Renseignez les informations du nouvel outil tiers.</p>
+
+  <form id="formulaire-ajout">
+    <div class="grille-formulaire">
+      <div class="champ">
+        <label for="ajout-nom">Nom de l’outil</label>
+        <input
+          type="text"
+          id="ajout-nom"
+          name="nom"
+          placeholder="Nom du service"
+          required
+        >
+      </div>
+
+      <div class="champ">
+        <label for="ajout-url">URL</label>
+        <input
+          type="url"
+          id="ajout-url"
+          name="url"
+          placeholder="https://"
+          required
+        >
+      </div>
+
+      <div class="champ champ-large">
+        <label for="ajout-description">Description</label>
+        <textarea
+          id="ajout-description"
+          name="description"
+          placeholder="Décrivez l’utilité de cet outil."
+          required
+        ></textarea>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>État de l’outil</legend>
+      <label for="ajout-actif">
+        <input type="checkbox" id="ajout-actif" name="actif" checked>
+        Activer cet outil
+      </label>
+    </fieldset>
+
+    <button type="submit">Ajouter l’outil</button>
+  </form>
+</section>
+
+<section id="section-modification" aria-labelledby="titre-modification" hidden>
+  <h2 id="titre-modification">Modifier un outil</h2>
+  <p class="introduction">Modifiez les informations puis enregistrez vos changements.</p>
+
+  <form id="formulaire-modification">
+    <input type="hidden" id="modification-identifiant" name="identifiant">
+
+    <div class="grille-formulaire">
+      <div class="champ">
+        <label for="modification-nom">Nom de l’outil</label>
+        <input type="text" id="modification-nom" name="nom" required>
+      </div>
+
+      <div class="champ">
+        <label for="modification-url">URL</label>
+        <input type="url" id="modification-url" name="url" required>
+      </div>
+
+      <div class="champ champ-large">
+        <label for="modification-description">Description</label>
+        <textarea id="modification-description" name="description" required></textarea>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>État de l’outil</legend>
+      <label for="modification-actif">
+        <input type="checkbox" id="modification-actif" name="actif">
+        Outil activé
+      </label>
+    </fieldset>
+
+    <div class="actions-formulaire">
+      <button type="submit">Enregistrer les modifications</button>
+      <button type="button" id="annuler-modification" class="bouton-secondaire">
+        Annuler
+      </button>
+    </div>
+  </form>
+</section>
+</main> <script> const cleStockage = "gestion-outils-tiers"; const outilsParDefaut = [ { id: "outil-001", nom: "Matomo", description: "Analyse de la fréquentation et création de rapports de visites.", url: "https://matomo.org/", actif: true }, { id: "outil-002", nom: "OpenStreetMap", description: "Service de cartographie libre pour afficher des cartes interactives.", url: "https://www.openstreetmap.org/", actif: false }, { id: "outil-003", nom: "Crisp", description: "Service de clavardage pour répondre aux questions des visiteurs.", url: "https://crisp.chat/", actif: true } ]; const listeOutils = document.getElementById("liste-outils"); const message = document.getElementById("message"); const formulaireAjout = document.getElementById("formulaire-ajout"); const formulaireModification = document.getElementById("formulaire-modification"); const sectionModification = document.getElementById("section-modification"); let outils = chargerOutils(); function chargerOutils() { try { const donnees = localStorage.getItem(cleStockage); return donnees ? JSON.parse(donnees) : [...outilsParDefaut]; } catch (erreur) { return [...outilsParDefaut]; } } function enregistrerOutils() { try { localStorage.setItem(cleStockage, JSON.stringify(outils)); } catch (erreur) { afficherMessage("Les changements n’ont pas pu être enregistrés."); } } function echapperHtml(valeur) { return String(valeur).replace(/[&<>"']/g, caractere => { const caracteres = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }; return caracteres[caractere]; }); } function urlSecurisee(valeur) { try { const url = new URL(valeur); return url.protocol === "http:" || url.protocol === "https:"; } catch (erreur) { return false; } } function afficherMessage(texte) { message.textContent = texte; if (texte) { window.setTimeout(() => { if (message.textContent === texte) { message.textContent = ""; } }, 4000); } } function afficherOutils() { if (outils.length === 0) { listeOutils.innerHTML = ` <tr> <td colspan="5">Aucun outil n’est enregistré.</td> </tr> `; return; } listeOutils.innerHTML = outils.map(outil => { const lien = urlSecurisee(outil.url) ? `<a href="${echapperHtml(outil.url)}" target="_blank" rel="noopener noreferrer">${echapperHtml(outil.url)}</a>` : echapperHtml(outil.url); const etat = outil.actif ? '<span class="etat etat-actif">Activé</span>' : '<span class="etat etat-inactif">Désactivé</span>'; const actionEtat = outil.actif ? "Désactiver" : "Activer"; return ` <tr> <td><strong>${echapperHtml(outil.nom)}</strong></td> <td>${echapperHtml(outil.description)}</td> <td>${lien}</td> <td>${etat}</td> <td> <div class="actions"> <button type="button" class="bouton-secondaire" data-action="modifier" data-id="${echapperHtml(outil.id)}"> Modifier </button> <button type="button" class="bouton-secondaire" data-action="etat" data-id="${echapperHtml(outil.id)}"> ${actionEtat} </button> <button type="button" class="bouton-suppression" data-action="supprimer" data-id="${echapperHtml(outil.id)}"> Supprimer </button> </div> </td> </tr> `; }).join(""); } function validerUrl(valeur) { if (!urlSecurisee(valeur)) { afficherMessage("Veuillez saisir une adresse commençant par http:// ou https://."); return false; } return true; } formulaireAjout.addEventListener("submit", evenement => { evenement.preventDefault(); const donnees = new FormData(formulaireAjout); const url = donnees.get("url").trim(); if (!validerUrl(url)) { return; } outils.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), nom: donnees.get("nom").trim(), description: donnees.get("description").trim(), url, actif: donnees.has("actif") }); enregistrerOutils(); afficherOutils(); formulaireAjout.reset(); document.getElementById("ajout-actif").checked = true; afficherMessage("L’outil a été ajouté."); }); formulaireModification.addEventListener("submit", evenement => { evenement.preventDefault(); const donnees = new FormData(formulaireModification); const identifiant = donnees.get("identifiant"); const url = donnees.get("url").trim(); if (!validerUrl(url)) { return; } outils = outils.map(outil => { if (outil.id !== identifiant) { return outil; } return { ...outil, nom: donnees.get("nom").trim(), description: donnees.get("description").trim(), url, actif: donnees.has("actif") }; }); enregistrerOutils(); afficherOutils(); fermerModification(); afficherMessage("Les modifications ont été enregistrées."); }); listeOutils.addEventListener("click", evenement => { const bouton = evenement.target.closest("button[data-action]"); if (!bouton) { return; } const outil = outils.find(element => element.id === bouton.dataset.id); if (!outil) { return; } if (bouton.dataset.action === "modifier") { ouvrirModification(outil); } if (bouton.dataset.action === "etat") { outil.actif = !outil.actif; enregistrerOutils(); afficherOutils(); afficherMessage( outil.actif ? `L’outil « ${outil.nom} » est activé.` : `L’outil « ${outil.nom} » est désactivé.` ); } if (bouton.dataset.action === "supprimer") { const confirmation = window.confirm( `Voulez-vous vraiment supprimer l’outil « ${outil.nom} » ?` ); if (confirmation) { outils = outils.filter(element => element.id !== outil.id); enregistrerOutils(); afficherOutils(); afficherMessage("L’outil a été supprimé."); } } }); function ouvrirModification(outil) { document.getElementById("modification-identifiant").value = outil.id; document.getElementById("modification-nom").value = outil.nom; document.getElementById("modification-description").value = outil.description; document.getElementById("modification-url").value = outil.url; document.getElementById("modification-actif").checked = outil.actif; sectionModification.hidden = false; sectionModification.scrollIntoView({ behavior: "smooth", block: "start" }); document.getElementById("modification-nom").focus(); } function fermerModification() { formulaireModification.reset(); sectionModification.hidden = true; } document.getElementById("annuler-modification").addEventListener("click", () => { fermerModification(); afficherMessage("La modification a été annulée."); }); afficherOutils(); </script> </body> </html> 
