@@ -345,4 +345,311 @@ fieldset label {
     </div>
   </form>
 </section>
-</main> <script> const cleStockage = "gestion-outils-tiers"; const outilsParDefaut = [ { id: "outil-001", nom: "Matomo", description: "Analyse de la fréquentation et création de rapports de visites.", url: "https://matomo.org/", actif: true }, { id: "outil-002", nom: "OpenStreetMap", description: "Service de cartographie libre pour afficher des cartes interactives.", url: "https://www.openstreetmap.org/", actif: false }, { id: "outil-003", nom: "Crisp", description: "Service de clavardage pour répondre aux questions des visiteurs.", url: "https://crisp.chat/", actif: true } ]; const listeOutils = document.getElementById("liste-outils"); const message = document.getElementById("message"); const formulaireAjout = document.getElementById("formulaire-ajout"); const formulaireModification = document.getElementById("formulaire-modification"); const sectionModification = document.getElementById("section-modification"); let outils = chargerOutils(); function chargerOutils() { try { const donnees = localStorage.getItem(cleStockage); return donnees ? JSON.parse(donnees) : [...outilsParDefaut]; } catch (erreur) { return [...outilsParDefaut]; } } function enregistrerOutils() { try { localStorage.setItem(cleStockage, JSON.stringify(outils)); } catch (erreur) { afficherMessage("Les changements n’ont pas pu être enregistrés."); } } function echapperHtml(valeur) { return String(valeur).replace(/[&<>"']/g, caractere => { const caracteres = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }; return caracteres[caractere]; }); } function urlSecurisee(valeur) { try { const url = new URL(valeur); return url.protocol === "http:" || url.protocol === "https:"; } catch (erreur) { return false; } } function afficherMessage(texte) { message.textContent = texte; if (texte) { window.setTimeout(() => { if (message.textContent === texte) { message.textContent = ""; } }, 4000); } } function afficherOutils() { if (outils.length === 0) { listeOutils.innerHTML = ` <tr> <td colspan="5">Aucun outil n’est enregistré.</td> </tr> `; return; } listeOutils.innerHTML = outils.map(outil => { const lien = urlSecurisee(outil.url) ? `<a href="${echapperHtml(outil.url)}" target="_blank" rel="noopener noreferrer">${echapperHtml(outil.url)}</a>` : echapperHtml(outil.url); const etat = outil.actif ? '<span class="etat etat-actif">Activé</span>' : '<span class="etat etat-inactif">Désactivé</span>'; const actionEtat = outil.actif ? "Désactiver" : "Activer"; return ` <tr> <td><strong>${echapperHtml(outil.nom)}</strong></td> <td>${echapperHtml(outil.description)}</td> <td>${lien}</td> <td>${etat}</td> <td> <div class="actions"> <button type="button" class="bouton-secondaire" data-action="modifier" data-id="${echapperHtml(outil.id)}"> Modifier </button> <button type="button" class="bouton-secondaire" data-action="etat" data-id="${echapperHtml(outil.id)}"> ${actionEtat} </button> <button type="button" class="bouton-suppression" data-action="supprimer" data-id="${echapperHtml(outil.id)}"> Supprimer </button> </div> </td> </tr> `; }).join(""); } function validerUrl(valeur) { if (!urlSecurisee(valeur)) { afficherMessage("Veuillez saisir une adresse commençant par http:// ou https://."); return false; } return true; } formulaireAjout.addEventListener("submit", evenement => { evenement.preventDefault(); const donnees = new FormData(formulaireAjout); const url = donnees.get("url").trim(); if (!validerUrl(url)) { return; } outils.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), nom: donnees.get("nom").trim(), description: donnees.get("description").trim(), url, actif: donnees.has("actif") }); enregistrerOutils(); afficherOutils(); formulaireAjout.reset(); document.getElementById("ajout-actif").checked = true; afficherMessage("L’outil a été ajouté."); }); formulaireModification.addEventListener("submit", evenement => { evenement.preventDefault(); const donnees = new FormData(formulaireModification); const identifiant = donnees.get("identifiant"); const url = donnees.get("url").trim(); if (!validerUrl(url)) { return; } outils = outils.map(outil => { if (outil.id !== identifiant) { return outil; } return { ...outil, nom: donnees.get("nom").trim(), description: donnees.get("description").trim(), url, actif: donnees.has("actif") }; }); enregistrerOutils(); afficherOutils(); fermerModification(); afficherMessage("Les modifications ont été enregistrées."); }); listeOutils.addEventListener("click", evenement => { const bouton = evenement.target.closest("button[data-action]"); if (!bouton) { return; } const outil = outils.find(element => element.id === bouton.dataset.id); if (!outil) { return; } if (bouton.dataset.action === "modifier") { ouvrirModification(outil); } if (bouton.dataset.action === "etat") { outil.actif = !outil.actif; enregistrerOutils(); afficherOutils(); afficherMessage( outil.actif ? `L’outil « ${outil.nom} » est activé.` : `L’outil « ${outil.nom} » est désactivé.` ); } if (bouton.dataset.action === "supprimer") { const confirmation = window.confirm( `Voulez-vous vraiment supprimer l’outil « ${outil.nom} » ?` ); if (confirmation) { outils = outils.filter(element => element.id !== outil.id); enregistrerOutils(); afficherOutils(); afficherMessage("L’outil a été supprimé."); } } }); function ouvrirModification(outil) { document.getElementById("modification-identifiant").value = outil.id; document.getElementById("modification-nom").value = outil.nom; document.getElementById("modification-description").value = outil.description; document.getElementById("modification-url").value = outil.url; document.getElementById("modification-actif").checked = outil.actif; sectionModification.hidden = false; sectionModification.scrollIntoView({ behavior: "smooth", block: "start" }); document.getElementById("modification-nom").focus(); } function fermerModification() { formulaireModification.reset(); sectionModification.hidden = true; } document.getElementById("annuler-modification").addEventListener("click", () => { fermerModification(); afficherMessage("La modification a été annulée."); }); afficherOutils(); </script> </body> </html> 
+</main> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://glbhoxvrgqhqloikgvth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_yU6zs5TvPejIV7MJlJGJzQ_Xvei3mTC";
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const outilsParDefaut = [
+    {
+      id: "outil-001",
+      nom: "Matomo",
+      description: "Analyse de la fréquentation et création de rapports de visites.",
+      url: "https://matomo.org/",
+      actif: true
+    },
+    {
+      id: "outil-002",
+      nom: "OpenStreetMap",
+      description: "Service de cartographie libre pour afficher des cartes interactives.",
+      url: "https://www.openstreetmap.org/",
+      actif: false
+    },
+    {
+      id: "outil-003",
+      nom: "Crisp",
+      description: "Service de clavardage pour répondre aux questions des visiteurs.",
+      url: "https://crisp.chat/",
+      actif: true
+    }
+  ];
+
+  const listeOutils = document.getElementById("liste-outils");
+  const message = document.getElementById("message");
+  const formulaireAjout = document.getElementById("formulaire-ajout");
+  const formulaireModification = document.getElementById("formulaire-modification");
+  const sectionModification = document.getElementById("section-modification");
+  let outils = [];
+
+  function afficherMessage(texte) {
+    message.textContent = texte;
+    if (texte) {
+      window.setTimeout(() => {
+        if (message.textContent === texte) message.textContent = "";
+      }, 4000);
+    }
+  }
+
+  function echapperHtml(valeur) {
+    return String(valeur).replace(/[&<>"']/g, caractere => {
+      const caracteres = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
+      return caracteres[caractere];
+    });
+  }
+
+  function urlSecurisee(valeur) {
+    try {
+      const url = new URL(valeur);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch (erreur) {
+      return false;
+    }
+  }
+
+  function validerUrl(valeur) {
+    if (!urlSecurisee(valeur)) {
+      afficherMessage("Veuillez saisir une adresse commençant par http:// ou https://.");
+      return false;
+    }
+    return true;
+  }
+
+  async function chargerOutils() {
+    const { data, error } = await client
+      .from("outils")
+      .select("id, nom, description, url, actif")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      afficherMessage("Impossible de charger les outils depuis la base en ligne.");
+      return;
+    }
+
+    if (data.length === 0) {
+      const { data: inseres, error: insertionError } = await client
+        .from("outils")
+        .insert(outilsParDefaut)
+        .select("id, nom, description, url, actif");
+
+      if (insertionError) {
+        console.error(insertionError);
+        afficherMessage("La base est vide mais les outils par défaut n'ont pas pu être créés.");
+        outils = [];
+      } else {
+        outils = inseres;
+      }
+    } else {
+      outils = data;
+    }
+
+    afficherOutils();
+  }
+
+  function afficherOutils() {
+    if (outils.length === 0) {
+      listeOutils.innerHTML = `
+        <tr>
+          <td colspan="5">Aucun outil n’est enregistré.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    listeOutils.innerHTML = outils.map(outil => {
+      const lien = urlSecurisee(outil.url)
+        ? `<a href="${echapperHtml(outil.url)}" target="_blank" rel="noopener noreferrer">${echapperHtml(outil.url)}</a>`
+        : echapperHtml(outil.url);
+
+      const etat = outil.actif
+        ? '<span class="etat etat-actif">Activé</span>'
+        : '<span class="etat etat-inactif">Désactivé</span>';
+
+      const actionEtat = outil.actif ? "Désactiver" : "Activer";
+
+      return `
+        <tr>
+          <td><strong>${echapperHtml(outil.nom)}</strong></td>
+          <td>${echapperHtml(outil.description)}</td>
+          <td>${lien}</td>
+          <td>${etat}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="bouton-secondaire" data-action="modifier" data-id="${echapperHtml(outil.id)}">
+                Modifier
+              </button>
+              <button type="button" class="bouton-secondaire" data-action="etat" data-id="${echapperHtml(outil.id)}">
+                ${actionEtat}
+              </button>
+              <button type="button" class="bouton-suppression" data-action="supprimer" data-id="${echapperHtml(outil.id)}">
+                Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  formulaireAjout.addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+
+    const donnees = new FormData(formulaireAjout);
+    const nom = donnees.get("nom").trim();
+    const description = donnees.get("description").trim();
+    const url = donnees.get("url").trim();
+
+    if (!validerUrl(url)) return;
+
+    const nouvelOutil = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      nom,
+      description,
+      url,
+      actif: donnees.has("actif")
+    };
+
+    const { data, error } = await client
+      .from("outils")
+      .insert(nouvelOutil)
+      .select("id, nom, description, url, actif")
+      .single();
+
+    if (error) {
+      console.error(error);
+      afficherMessage("L’outil n’a pas pu être enregistré en ligne.");
+      return;
+    }
+
+    outils.push(data);
+    afficherOutils();
+    formulaireAjout.reset();
+    document.getElementById("ajout-actif").checked = true;
+    afficherMessage("L’outil a été ajouté et enregistré en ligne.");
+  });
+
+  formulaireModification.addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+
+    const donnees = new FormData(formulaireModification);
+    const identifiant = donnees.get("identifiant");
+    const nom = donnees.get("nom").trim();
+    const description = donnees.get("description").trim();
+    const url = donnees.get("url").trim();
+    const actif = donnees.has("actif");
+
+    if (!validerUrl(url)) return;
+
+    const { data, error } = await client
+      .from("outils")
+      .update({ nom, description, url, actif })
+      .eq("id", identifiant)
+      .select("id, nom, description, url, actif")
+      .single();
+
+    if (error) {
+      console.error(error);
+      afficherMessage("Les modifications n’ont pas pu être enregistrées en ligne.");
+      return;
+    }
+
+    outils = outils.map(outil => outil.id === identifiant ? data : outil);
+    afficherOutils();
+    fermerModification();
+    afficherMessage("Les modifications ont été enregistrées en ligne.");
+  });
+
+  listeOutils.addEventListener("click", async evenement => {
+    const bouton = evenement.target.closest("button[data-action]");
+    if (!bouton) return;
+
+    const outil = outils.find(element => element.id === bouton.dataset.id);
+    if (!outil) return;
+
+    if (bouton.dataset.action === "modifier") {
+      ouvrirModification(outil);
+      return;
+    }
+
+    if (bouton.dataset.action === "etat") {
+      const nouvelEtat = !outil.actif;
+
+      const { data, error } = await client
+        .from("outils")
+        .update({ actif: nouvelEtat })
+        .eq("id", outil.id)
+        .select("id, nom, description, url, actif")
+        .single();
+
+      if (error) {
+        console.error(error);
+        afficherMessage("L’état de l’outil n’a pas pu être enregistré en ligne.");
+        return;
+      }
+
+      outils = outils.map(element => element.id === outil.id ? data : element);
+      afficherOutils();
+      afficherMessage(
+        data.actif
+          ? `L’outil « ${data.nom} » est activé.`
+          : `L’outil « ${data.nom} » est désactivé.`
+      );
+      return;
+    }
+
+    if (bouton.dataset.action === "supprimer") {
+      const confirmation = window.confirm(
+        `Voulez-vous vraiment supprimer l’outil « ${outil.nom} » ?`
+      );
+
+      if (!confirmation) return;
+
+      const { error } = await client
+        .from("outils")
+        .delete()
+        .eq("id", outil.id);
+
+      if (error) {
+        console.error(error);
+        afficherMessage("L’outil n’a pas pu être supprimé de la base en ligne.");
+        return;
+      }
+
+      outils = outils.filter(element => element.id !== outil.id);
+      afficherOutils();
+      afficherMessage("L’outil a été supprimé.");
+    }
+  });
+
+  function ouvrirModification(outil) {
+    document.getElementById("modification-identifiant").value = outil.id;
+    document.getElementById("modification-nom").value = outil.nom;
+    document.getElementById("modification-description").value = outil.description;
+    document.getElementById("modification-url").value = outil.url;
+    document.getElementById("modification-actif").checked = outil.actif;
+
+    sectionModification.hidden = false;
+    sectionModification.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("modification-nom").focus();
+  }
+
+  function fermerModification() {
+    formulaireModification.reset();
+    sectionModification.hidden = true;
+  }
+
+  document.getElementById("annuler-modification").addEventListener("click", () => {
+    fermerModification();
+    afficherMessage("La modification a été annulée.");
+  });
+
+  chargerOutils();
+</script>
+</body> </html>  
